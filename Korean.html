@@ -464,13 +464,13 @@
 <script>
   (function() {
     // ----- 常數 -----
-    const STORAGE_KEY = 'koreanVocabPairs_v2';  // 改版本號，避免舊資料格式衝突
+    const STORAGE_KEY = 'koreanVocabPairs_v3';  // 改版本號以套用新的初始詞庫
     const MAX_DRAW_PER_WORD = 3;
 
     // ----- 資料儲存 -----
     // 每個項目格式: { korean: '사랑', meaning: '愛', drawCount: 0 }
     let wordPairs = [];
-    let currentPair = null;      // 目前抽到的單字（參考 wordPairs 中的物件）
+    let currentPair = null;
 
     // DOM 元素
     const koreanInput = document.getElementById('koreanInput');
@@ -530,7 +530,7 @@
       return false;
     }
 
-    // ----- 計算可抽取的單字（drawCount < MAX_DRAW_PER_WORD） -----
+    // ----- 計算可抽取的單字 -----
     function getDrawableWords() {
       return wordPairs.filter(p => p.drawCount < MAX_DRAW_PER_WORD);
     }
@@ -631,7 +631,7 @@
       koreanInput.focus();
     }
 
-    // ----- 重置所有抽取次數（不刪除單字） -----
+    // ----- 重置所有抽取次數 -----
     function resetDrawCounts(silent) {
       wordPairs.forEach(p => { p.drawCount = 0; });
       renderWordList();
@@ -654,28 +654,22 @@
 
       let drawable = getDrawableWords();
 
-      // 如果沒有可抽取的單字 → 全部抽滿，自動重置
+      // 全部抽滿 → 自動重置
       if (drawable.length === 0) {
-        resetDrawCounts(true);  // silent = true，不清除顯示區
+        resetDrawCounts(true);
         drawable = getDrawableWords();
-        // 提示使用者（可選）
-        // alert('所有單字已抽滿 3 次，已自動重置抽取記錄！');
       }
 
-      // 從可抽取的單字中隨機選一個
       const randomIndex = Math.floor(Math.random() * drawable.length);
       const picked = drawable[randomIndex];
 
-      // 增加抽取次數
       picked.drawCount += 1;
       currentPair = picked;
 
-      // 更新顯示區
       koreanDisplay.textContent = picked.korean;
       meaningDisplay.textContent = picked.meaning;
       meaningDisplay.classList.add('hidden-meaning');
 
-      // 更新列表與進度
       renderWordList();
       saveToStorage();
     }
@@ -707,12 +701,24 @@
       const hasSavedData = loadFromStorage();
 
       if (!hasSavedData) {
+        // 自訂初始詞庫
         wordPairs = [
-          { korean: '사랑', meaning: '愛', drawCount: 0 },
-          { korean: '친구', meaning: '朋友', drawCount: 0 },
-          { korean: '학교', meaning: '學校', drawCount: 0 },
-          { korean: '행복', meaning: '幸福', drawCount: 0 },
-          { korean: '고양이', meaning: '貓', drawCount: 0 }
+          { korean: '과자', meaning: '零食', drawCount: 0 },
+          { korean: '공잭', meaning: '本子', drawCount: 0 },
+          { korean: '과일', meaning: '水果', drawCount: 0 },
+          { korean: '걱정', meaning: '擔心', drawCount: 0 },
+          { korean: '건너편', meaning: '對面', drawCount: 0 },
+          { korean: '가방', meaning: '包', drawCount: 0 },
+          { korean: '가운데', meaning: '中間', drawCount: 0 },
+          { korean: '운', meaning: '門', drawCount: 0 },
+          { korean: '구경', meaning: '觀賞/遊覽', drawCount: 0 },
+          { korean: '근저', meaning: '附近', drawCount: 0 },
+          { korean: '구두', meaning: '皮鞋', drawCount: 0 },
+          { korean: '관심', meaning: '關心', drawCount: 0 },
+          { korean: '기억', meaning: '記憶', drawCount: 0 },
+          { korean: '기회', meaning: '機會', drawCount: 0 },
+          { korean: '경험', meaning: '經驗', drawCount: 0 },
+          { korean: '꽃', meaning: '花', drawCount: 0 }
         ];
         saveToStorage();
       }
