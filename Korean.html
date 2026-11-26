@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>韓文單字抽背 · 幸運抽籤</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    }
+    body {
+      background: linear-gradient(145deg, #f8f0e7 0%, #f0e6db 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 800px;
+      width: 100%;
+      background: #fffcf8;
+      border-radius: 40px;
+      box-shadow: 0 20px 35px rgba(120, 90, 70, 0.15), 0 6px 12px rgba(0, 0, 0, 0.05);
+      padding: 32px 28px;
+      border: 1px solid #f0e0d0;
+    }
+    h1 {
+      font-size: 2rem;
+      font-weight: 600;
+      color: #5e4b3c;
+      margin: 0 0 8px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      letter-spacing: -0.5px;
+    }
+    h1 span {
+      background: #ffe9d9;
+      font-size: 1.7rem;
+      padding: 0 10px;
+      border-radius: 30px;
+      line-height: 1.4;
+    }
+    .subhead {
+      color: #9b877a;
+      font-size: 0.95rem;
+      margin-bottom: 24px;
+      border-left: 4px solid #e6c8b0;
+      padding-left: 16px;
+      background: #fff9f4;
+      border-radius: 0 20px 20px 0;
+      line-height: 1.4;
+      padding: 10px 16px;
+    }
+
+    /* ---------- 下拉式字庫 ---------- */
+    .library-dropdown {
+      margin-bottom: 28px;
+      border-radius: 28px;
+      background: #f9f3ec;
+      border: 1px solid #e8d8ca;
+      overflow: hidden;
+      transition: box-shadow 0.2s;
+    }
+    .library-dropdown[open] {
+      box-shadow: 0 12px 20px rgba(120, 90, 70, 0.08);
+    }
+    .dropdown-summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 22px;
+      cursor: pointer;
+      user-select: none;
+      list-style: none;
+      background: #f9f3ec;
+      transition: background 0.15s;
+    }
+    .dropdown-summary::-webkit-details-marker {
+      display: none;
+    }
+    .dropdown-summary:hover {
+      background: #f3ebe2;
+    }
+    .summary-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+      color: #6b5a4b;
+      font-size: 1.1rem;
+    }
+    .summary-left .chevron {
+      font-size: 1.2rem;
+      color: #a48d7a;
+      transition: transform 0.2s;
+      display: inline-block;
+      width: 22px;
+      text-align: center;
+    }
+    .library-dropdown[open] .summary-left .chevron {
+      transform: rotate(90deg);
+    }
+    .summary-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .badge {
+      background: #dccbbc;
+      color: #4d3e32;
+      padding: 4px 14px;
+      border-radius: 30px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    .dropdown-content {
+      padding: 0 22px 22px 22px;
+      background: #f9f3ec;
+    }
+
+    /* 輸入區 */
+    .pair-input {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+    .pair-input input {
+      flex: 1 1 180px;
+      padding: 14px 18px;
+      border: 2px solid #e3d3c5;
+      border-radius: 60px;
+      background: white;
+      font-size: 1rem;
+      outline: none;
+      transition: 0.2s;
+    }
+    .pair-input input:focus {
+      border-color: #c7a68b;
+      box-shadow: 0 0 0 3px rgba(199, 166, 139, 0.2);
+    }
+    .pair-input input::placeholder {
+      color: #b8a99c;
+      font-weight: 300;
+    }
+    .btn {
+      border: none;
+      cursor: pointer;
+      font-weight: 500;
+      border-radius: 60px;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+    .btn-add {
+      background: #6b5a4b;
+      color: white;
+      padding: 14px 28px;
+      font-size: 1rem;
+      box-shadow: 0 6px 12px rgba(107, 90, 75, 0.2);
+    }
+    .btn-add:hover {
+      background: #544437;
+      transform: translateY(-1px);
+      box-shadow: 0 10px 18px rgba(107, 90, 75, 0.25);
+    }
+    .btn-add:active {
+      transform: translateY(2px);
+      box-shadow: 0 4px 8px rgba(107, 90, 75, 0.2);
+    }
+
+    /* 單字列表 (在下拉內容裡) */
+    .word-list {
+      max-height: 240px;
+      overflow-y: auto;
+      background: white;
+      border-radius: 24px;
+      padding: 6px 0;
+      border: 1px solid #ebded2;
+      margin-top: 6px;
+      scrollbar-width: thin;
+      scrollbar-color: #d0bdae #f3ece6;
+    }
+    .word-list::-webkit-scrollbar {
+      width: 8px;
+    }
+    .word-list::-webkit-scrollbar-track {
+      background: #f3ece6;
+      border-radius: 12px;
+    }
+    .word-list::-webkit-scrollbar-thumb {
+      background: #d0bdae;
+      border-radius: 12px;
+    }
+    .word-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 20px;
+      border-bottom: 1px solid #f3e9e0;
+      transition: background 0.1s;
+    }
+    .word-item:last-child {
+      border-bottom: none;
+    }
+    .word-item:hover {
+      background: #fef8f2;
+    }
+    .korean-word {
+      font-weight: 600;
+      color: #3f3228;
+      font-size: 1.05rem;
+      word-break: break-word;
+    }
+    .meaning {
+      color: #8d7a6b;
+      font-size: 0.95rem;
+      word-break: break-word;
+      margin-left: 10px;
+    }
+    .draw-count-tag {
+      font-size: 0.7rem;
+      color: #a48d7a;
+      background: #f3ece6;
+      padding: 2px 8px;
+      border-radius: 20px;
+      margin-left: 6px;
+      white-space: nowrap;
+    }
+    .draw-count-tag.maxed {
+      background: #fde2d4;
+      color: #b35e3a;
+    }
+    .btn-delete {
+      background: transparent;
+      color: #c2aa98;
+      padding: 6px 12px;
+      font-size: 0.85rem;
+      border-radius: 40px;
+      border: 1px solid transparent;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+    .btn-delete:hover {
+      background: #ffede3;
+      color: #b35e3a;
+      border-color: #e9cbb8;
+    }
+    .empty-message {
+      color: #b8a99c;
+      text-align: center;
+      padding: 28px 16px;
+      font-style: italic;
+      font-size: 0.95rem;
+    }
+
+    /* 抽籤顯示區 */
+    .draw-area {
+      background: #fff5ed;
+      border-radius: 32px;
+      padding: 26px 24px 22px;
+      border: 1px solid #ecdccc;
+      text-align: center;
+      margin-bottom: 18px;
+      box-shadow: inset 0 2px 6px rgba(255, 255, 255, 0.8), 0 4px 8px rgba(150, 120, 100, 0.05);
+    }
+    .korean-display {
+      font-size: 3.4rem;
+      font-weight: 700;
+      color: #332b24;
+      line-height: 1.3;
+      margin: 10px 0 12px;
+      word-break: break-word;
+      min-height: 5rem;
+      letter-spacing: -0.5px;
+      text-shadow: 2px 2px 0 rgba(230, 210, 190, 0.4);
+    }
+    .meaning-display {
+      font-size: 1.7rem;
+      font-weight: 400;
+      color: #7a6759;
+      background: #fffaf5;
+      display: inline-block;
+      padding: 10px 28px;
+      border-radius: 80px;
+      border: 1px solid #e7d7c9;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.02);
+      min-height: 3.5rem;
+      line-height: 1.4;
+      word-break: break-word;
+      max-width: 100%;
+      transition: opacity 0.2s, background 0.2s;
+    }
+    .meaning-display.hidden-meaning {
+      opacity: 0;
+      background: transparent;
+      border-color: transparent;
+      box-shadow: none;
+      color: transparent;
+      user-select: none;
+    }
+    .btn-draw {
+      background: #dcc2ae;
+      color: #3a2e25;
+      padding: 18px 28px;
+      font-size: 1.2rem;
+      font-weight: 600;
+      width: 100%;
+      border-radius: 80px;
+      box-shadow: 0 12px 22px rgba(180, 150, 130, 0.3);
+      letter-spacing: 0.3px;
+      border: 1px solid #e7d1c0;
+    }
+    .btn-draw:hover {
+      background: #ceb19a;
+      transform: translateY(-2px);
+      box-shadow: 0 18px 28px rgba(180, 150, 130, 0.35);
+    }
+    .btn-draw:active {
+      transform: translateY(3px);
+      box-shadow: 0 6px 12px rgba(180, 150, 130, 0.25);
+    }
+    .action-row {
+      display: flex;
+      gap: 14px;
+      margin-top: 18px;
+    }
+    .btn-answer {
+      background: #e5d5c6;
+      color: #4b3e34;
+      padding: 16px 22px;
+      font-size: 1.1rem;
+      font-weight: 500;
+      flex: 2;
+      border-radius: 80px;
+      border: 1px solid #e0cdbb;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.02);
+    }
+    .btn-answer:hover {
+      background: #dac4b0;
+      box-shadow: 0 8px 14px rgba(150, 120, 100, 0.15);
+    }
+    .btn-answer:active {
+      transform: scale(0.98);
+    }
+    .btn-reset {
+      background: #f3e9e0;
+      color: #8a7768;
+      padding: 16px 18px;
+      font-size: 1rem;
+      flex: 1;
+      border-radius: 80px;
+      border: 1px solid #e2d0c0;
+    }
+    .btn-reset:hover {
+      background: #ebded2;
+      color: #6b5a4b;
+    }
+    .note {
+      font-size: 0.8rem;
+      color: #b8a99c;
+      text-align: center;
+      margin-top: 16px;
+      border-top: 1px dashed #e6d7ca;
+      padding-top: 18px;
+    }
+    .save-hint {
+      font-size: 0.75rem;
+      color: #a48d7a;
+      text-align: right;
+      margin-top: 8px;
+      opacity: 0.8;
+    }
+    /* 抽籤進度條 */
+    .progress-info {
+      font-size: 0.85rem;
+      color: #9b877a;
+      margin-top: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .progress-bar-bg {
+      background: #ecdccc;
+      border-radius: 20px;
+      height: 6px;
+      width: 120px;
+      overflow: hidden;
+      display: inline-block;
+    }
+    .progress-bar-fill {
+      background: #c7a68b;
+      height: 100%;
+      border-radius: 20px;
+      width: 0%;
+      transition: width 0.3s;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>
+    <span>📖</span> 韓文單字抽背
+  </h1>
+  <div class="subhead">
+    ✏️ 每個單字最多抽 3 次 · 全部抽完自動重置 · 點擊「查看答案」顯示中文
+  </div>
+
+  <!-- 下拉式字庫 (details/summary) -->
+  <details class="library-dropdown" id="libraryDropdown">
+    <summary class="dropdown-summary">
+      <div class="summary-left">
+        <span class="chevron">▶</span>
+        <span>📚 字庫管理</span>
+      </div>
+      <div class="summary-right">
+        <span class="badge" id="wordCountBadge">0 個單字</span>
+      </div>
+    </summary>
+    <div class="dropdown-content">
+      <div class="pair-input">
+        <input type="text" id="koreanInput" placeholder="韓文單字 (例如: 사랑)" autocomplete="off">
+        <input type="text" id="meaningInput" placeholder="中文意思 (例如: 愛)" autocomplete="off">
+        <button class="btn btn-add" id="addBtn">➕ 加入</button>
+      </div>
+      <div class="word-list" id="wordListContainer">
+        <div class="empty-message">還沒有單字，請先新增一組韓文和中文吧</div>
+      </div>
+      <div class="save-hint" id="saveHint">✓ 單字庫已自動儲存</div>
+    </div>
+  </details>
+
+  <!-- 抽籤與顯示區 -->
+  <div class="draw-area">
+    <div class="korean-display" id="koreanDisplay">✨ 韓文 ✨</div>
+    <div class="meaning-display hidden-meaning" id="meaningDisplay">中文意思</div>
+    <div class="progress-info" id="progressInfo">
+      <span>抽取進度</span>
+      <span class="progress-bar-bg"><span class="progress-bar-fill" id="progressFill"></span></span>
+      <span id="progressText">0 / 0</span>
+    </div>
+  </div>
+
+  <!-- 按鈕區 -->
+  <button class="btn btn-draw" id="drawBtn">🎲 隨機抽籤 · 抽一個單字</button>
+  <div class="action-row">
+    <button class="btn btn-answer" id="showAnswerBtn">🔍 查看答案</button>
+    <button class="btn btn-reset" id="resetBtn">🔄 重置抽籤記錄</button>
+  </div>
+  <div class="note">
+    💡 每個單字最多出現 3 次，全部單字都抽滿 3 次後會自動重置。單字庫會保存在這台裝置的瀏覽器中。
+  </div>
+</div>
+
+<script>
+  (function() {
+    // ----- 常數 -----
+    const STORAGE_KEY = 'koreanVocabPairs_v2';  // 改版本號，避免舊資料格式衝突
+    const MAX_DRAW_PER_WORD = 3;
+
+    // ----- 資料儲存 -----
+    // 每個項目格式: { korean: '사랑', meaning: '愛', drawCount: 0 }
+    let wordPairs = [];
+    let currentPair = null;      // 目前抽到的單字（參考 wordPairs 中的物件）
+
+    // DOM 元素
+    const koreanInput = document.getElementById('koreanInput');
+    const meaningInput = document.getElementById('meaningInput');
+    const addBtn = document.getElementById('addBtn');
+    const wordListContainer = document.getElementById('wordListContainer');
+    const wordCountBadge = document.getElementById('wordCountBadge');
+    const koreanDisplay = document.getElementById('koreanDisplay');
+    const meaningDisplay = document.getElementById('meaningDisplay');
+    const drawBtn = document.getElementById('drawBtn');
+    const showAnswerBtn = document.getElementById('showAnswerBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const libraryDropdown = document.getElementById('libraryDropdown');
+    const saveHint = document.getElementById('saveHint');
+    const progressFill = document.getElementById('progressFill');
+    const progressText = document.getElementById('progressText');
+
+    // ----- 儲存到 localStorage -----
+    function saveToStorage() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(wordPairs));
+        saveHint.textContent = '✓ 已儲存';
+        saveHint.style.color = '#7a9e7e';
+        setTimeout(() => {
+          saveHint.textContent = '✓ 單字庫已自動儲存';
+          saveHint.style.color = '#a48d7a';
+        }, 1200);
+      } catch (e) {
+        console.warn('無法儲存到 localStorage:', e);
+        saveHint.textContent = '⚠️ 儲存失敗（瀏覽器隱私模式？）';
+        saveHint.style.color = '#b35e3a';
+      }
+    }
+
+    // ----- 從 localStorage 載入 -----
+    function loadFromStorage() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) {
+            wordPairs = parsed
+              .filter(item =>
+                item && typeof item.korean === 'string' && typeof item.meaning === 'string'
+              )
+              .map(item => ({
+                korean: item.korean,
+                meaning: item.meaning,
+                drawCount: typeof item.drawCount === 'number' ? item.drawCount : 0
+              }));
+            return true;
+          }
+        }
+      } catch (e) {
+        console.warn('讀取 localStorage 失敗:', e);
+      }
+      return false;
+    }
+
+    // ----- 計算可抽取的單字（drawCount < MAX_DRAW_PER_WORD） -----
+    function getDrawableWords() {
+      return wordPairs.filter(p => p.drawCount < MAX_DRAW_PER_WORD);
+    }
+
+    // ----- 更新進度條 -----
+    function updateProgress() {
+      const total = wordPairs.length;
+      const done = wordPairs.filter(p => p.drawCount >= MAX_DRAW_PER_WORD).length;
+      const percent = total === 0 ? 0 : (done / total) * 100;
+      progressFill.style.width = percent + '%';
+      progressText.textContent = `${done} / ${total}`;
+    }
+
+    // ----- 更新UI列表及計數 -----
+    function renderWordList() {
+      wordCountBadge.textContent = `${wordPairs.length} 個單字`;
+
+      if (wordPairs.length === 0) {
+        wordListContainer.innerHTML = '<div class="empty-message">還沒有單字，請先新增一組韓文和中文吧</div>';
+        updateProgress();
+        return;
+      }
+
+      let html = '';
+      wordPairs.forEach((pair, index) => {
+        const isMaxed = pair.drawCount >= MAX_DRAW_PER_WORD;
+        const tagClass = isMaxed ? 'draw-count-tag maxed' : 'draw-count-tag';
+        const tagText = isMaxed ? '已抽滿 3 次' : `已抽 ${pair.drawCount} / 3 次`;
+        html += `
+          <div class="word-item">
+            <div>
+              <span class="korean-word">${escapeHtml(pair.korean)}</span>
+              <span class="meaning">— ${escapeHtml(pair.meaning)}</span>
+              <span class="${tagClass}">${tagText}</span>
+            </div>
+            <button class="btn btn-delete" data-index="${index}" title="刪除這組單字">✕ 刪除</button>
+          </div>
+        `;
+      });
+      wordListContainer.innerHTML = html;
+
+      document.querySelectorAll('.btn-delete').forEach(btn => {
+        btn.addEventListener('click', () => {
+          deleteWordAtIndex(Number(btn.dataset.index));
+        });
+      });
+
+      updateProgress();
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // ----- 刪除單字 -----
+    function deleteWordAtIndex(index) {
+      if (index < 0 || index >= wordPairs.length) return;
+      
+      const deletedPair = wordPairs[index];
+      if (currentPair === deletedPair) {
+        currentPair = null;
+        koreanDisplay.textContent = '✨ 韓文 ✨';
+        meaningDisplay.textContent = '中文意思';
+        meaningDisplay.classList.add('hidden-meaning');
+      }
+      
+      wordPairs.splice(index, 1);
+      renderWordList();
+      saveToStorage();
+
+      if (wordPairs.length === 0) {
+        currentPair = null;
+        koreanDisplay.textContent = '✨ 韓文 ✨';
+        meaningDisplay.textContent = '中文意思';
+        meaningDisplay.classList.add('hidden-meaning');
+      }
+    }
+
+    // ----- 新增單字 -----
+    function addWordPair() {
+      const korean = koreanInput.value.trim();
+      const meaning = meaningInput.value.trim();
+
+      if (!korean || !meaning) {
+        alert('請輸入韓文單字和中文意思！');
+        return;
+      }
+
+      wordPairs.push({ korean, meaning, drawCount: 0 });
+      renderWordList();
+      saveToStorage();
+
+      koreanInput.value = '';
+      meaningInput.value = '';
+      koreanInput.focus();
+    }
+
+    // ----- 重置所有抽取次數（不刪除單字） -----
+    function resetDrawCounts(silent) {
+      wordPairs.forEach(p => { p.drawCount = 0; });
+      renderWordList();
+      saveToStorage();
+      if (!silent) {
+        currentPair = null;
+        koreanDisplay.textContent = '✨ 韓文 ✨';
+        meaningDisplay.textContent = '中文意思';
+        meaningDisplay.classList.add('hidden-meaning');
+      }
+    }
+
+    // ----- 抽籤 -----
+    function drawRandom() {
+      if (wordPairs.length === 0) {
+        alert('字庫是空的！請先新增一些韓文單字吧。');
+        libraryDropdown.open = true;
+        return;
+      }
+
+      let drawable = getDrawableWords();
+
+      // 如果沒有可抽取的單字 → 全部抽滿，自動重置
+      if (drawable.length === 0) {
+        resetDrawCounts(true);  // silent = true，不清除顯示區
+        drawable = getDrawableWords();
+        // 提示使用者（可選）
+        // alert('所有單字已抽滿 3 次，已自動重置抽取記錄！');
+      }
+
+      // 從可抽取的單字中隨機選一個
+      const randomIndex = Math.floor(Math.random() * drawable.length);
+      const picked = drawable[randomIndex];
+
+      // 增加抽取次數
+      picked.drawCount += 1;
+      currentPair = picked;
+
+      // 更新顯示區
+      koreanDisplay.textContent = picked.korean;
+      meaningDisplay.textContent = picked.meaning;
+      meaningDisplay.classList.add('hidden-meaning');
+
+      // 更新列表與進度
+      renderWordList();
+      saveToStorage();
+    }
+
+    // ----- 顯示答案 -----
+    function showAnswer() {
+      if (!currentPair) {
+        alert('請先抽籤！');
+        return;
+      }
+      koreanDisplay.textContent = currentPair.korean;
+      meaningDisplay.textContent = currentPair.meaning;
+      meaningDisplay.classList.remove('hidden-meaning');
+    }
+
+    // ----- 重置抽籤記錄（按鈕） -----
+    function handleResetButton() {
+      if (wordPairs.length === 0) {
+        alert('字庫是空的，沒有記錄可以重置。');
+        return;
+      }
+      if (confirm('確定要將所有單字的抽取次數歸零嗎？（單字本身不會被刪除）')) {
+        resetDrawCounts(false);
+      }
+    }
+
+    // ----- 初始化 -----
+    function init() {
+      const hasSavedData = loadFromStorage();
+
+      if (!hasSavedData) {
+        wordPairs = [
+          { korean: '사랑', meaning: '愛', drawCount: 0 },
+          { korean: '친구', meaning: '朋友', drawCount: 0 },
+          { korean: '학교', meaning: '學校', drawCount: 0 },
+          { korean: '행복', meaning: '幸福', drawCount: 0 },
+          { korean: '고양이', meaning: '貓', drawCount: 0 }
+        ];
+        saveToStorage();
+      }
+
+      renderWordList();
+
+      addBtn.addEventListener('click', addWordPair);
+      koreanInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); addWordPair(); }
+      });
+      meaningInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); addWordPair(); }
+      });
+
+      drawBtn.addEventListener('click', drawRandom);
+      showAnswerBtn.addEventListener('click', showAnswer);
+      resetBtn.addEventListener('click', handleResetButton);
+    }
+
+    init();
+  })();
+</script>
+</body>
+</html>
